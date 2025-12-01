@@ -3,960 +3,542 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Geometry Dash Clone</title>
+  <title>Mini 2D Game Engine & IDE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
   <style>
     :root {
-      --bg-top: #141432;
-      --bg-bottom: #1f6acb;
-      --accent: #ffe066;
-      --panel: rgba(10, 12, 34, 0.8);
-      --text: #f7f7ff;
-      --muted: #b7c0e0;
-      --button: #3bb273;
-      --button-hover: #4fd48d;
-      --danger: #ff6b6b;
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      --bg: #0b1220;
+      --panel: #0f172a;
+      --panel-2: #111827;
+      --border: #1f2937;
+      --accent: #38bdf8;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --shadow: 0 10px 40px rgba(0,0,0,0.35);
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      background: radial-gradient(circle at 20% 20%, rgba(56,189,248,0.08), transparent 25%),
+                  radial-gradient(circle at 80% 0%, rgba(37,99,235,0.08), transparent 25%),
+                  var(--bg);
       color: var(--text);
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
-    }
-
-    #game-container {
-      position: relative;
-      width: min(100vw, 1100px);
-      aspect-ratio: 16 / 9;
-      max-height: 95vh;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.04), transparent 40%),
-                  radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.05), transparent 35%),
-                  linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 50%);
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: transparent;
-    }
-
-    .overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: radial-gradient(circle at center, rgba(20, 20, 50, 0.85), rgba(5, 8, 20, 0.95));
-      backdrop-filter: blur(6px);
-      z-index: 5;
-      padding: 20px;
-      flex-direction: column;
-      gap: 18px;
-      text-align: center;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(28px, 5vw, 48px);
-      letter-spacing: 2px;
-    }
-
-    p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
-      max-width: 640px;
-    }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    button {
-      background: var(--button);
-      border: none;
-      color: #0b1c2c;
-      font-weight: 700;
-      padding: 12px 18px;
-      border-radius: 12px;
-      cursor: pointer;
-      min-width: 140px;
-      box-shadow: var(--shadow);
-      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
-      font-size: 15px;
-    }
-
-    button:hover {
-      background: var(--button-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
-    }
-
-    button.danger {
-      background: var(--danger);
-      color: #fff;
-    }
-
-    button.secondary {
-      background: rgba(255, 255, 255, 0.12);
-      color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: none;
-    }
-
-    button.small {
-      min-width: 100px;
-      padding: 8px 12px;
-      font-size: 13px;
-    }
-
-    #character-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 14px;
-      width: 100%;
-      max-width: 640px;
-    }
-
-    .character-card {
-      border-radius: 12px;
-      padding: 12px;
-      border: 2px solid transparent;
-      background: rgba(255, 255, 255, 0.05);
-      position: relative;
-      cursor: pointer;
-      transition: border-color 150ms ease, transform 150ms ease;
-      box-shadow: var(--shadow);
-    }
-
-    .character-card:hover {
-      transform: translateY(-3px);
-    }
-
-    .character-card.selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(255, 224, 102, 0.3), var(--shadow);
-    }
-
-    .character-preview {
-      width: 72px;
-      height: 72px;
-      margin: 0 auto 10px;
-      border-radius: 10px;
-      position: relative;
+      grid-template-rows: auto 1fr;
       overflow: hidden;
+    }
+    header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
-      justify-content: center;
-    }
-
-    .info-text {
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    #hud {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      display: flex;
       justify-content: space-between;
-      font-weight: 700;
-      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-      z-index: 2;
-      pointer-events: none;
+      box-shadow: var(--shadow);
     }
-
-    #pause-btn {
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 3;
-      pointer-events: auto;
-    }
-
-    #progress-bar {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
+    header h1 { margin: 0; font-size: 18px; letter-spacing: 0.5px; }
+    header .tag { background: rgba(56,189,248,0.12); color: var(--accent); padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+    main {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.4fr;
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 64px);
       overflow: hidden;
     }
-
-    #progress-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #5efce8, #736efe);
+    .panel {
+      background: linear-gradient(160deg, rgba(17,24,39,0.95), rgba(15,23,42,0.95));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
-
-    @media (max-width: 640px) {
-      #game-container {
-        border-radius: 0;
-        max-height: 100vh;
-      }
-      button {
-        min-width: 120px;
-      }
+    .panel h3 {
+      margin: 0;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--muted);
     }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .btn {
+      background: #0b1629;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: transform 120ms ease, background 120ms ease, border 120ms ease;
+    }
+    .btn:hover { background: #152238; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.play { background: var(--success); color: #0b1220; border-color: #16a34a; }
+    .btn.stop { background: var(--danger); color: #fff; border-color: #b91c1c; }
+    .btn.small { padding: 6px 10px; font-size: 12px; }
+    #editor-tabs { display: flex; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    #editor-tabs button {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    #editor-tabs button.active { background: var(--accent); color: #0b1220; border-color: #0ea5e9; }
+    #code { flex: 1; min-height: 0; }
+    .CodeMirror { height: 100%; background: #0b1220; color: #e2e8f0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .CodeMirror-gutters { background: #0b1220; border-right: 1px solid var(--border); }
+    #file-actions { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
+    #assets { padding: 10px 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 10px; }
+    .asset-card { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #0b1220; text-align: center; }
+    .asset-card img { width: 72px; height: 72px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; }
+    #hierarchy { flex: 1; overflow: auto; padding: 10px 12px; }
+    #hierarchy ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    #hierarchy li { padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: #0b1220; cursor: grab; display: flex; justify-content: space-between; align-items: center; }
+    #hierarchy li.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56,189,248,0.2); }
+    #inspector { flex: 1; overflow: auto; padding: 10px 12px; display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 10px; }
+    #inspector label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+    #inspector input, #inspector select { width: 100%; background: #0b1220; border: 1px solid var(--border); border-radius: 8px; padding: 8px; color: var(--text); }
+    #game-panel { display: grid; grid-template-rows: 1fr auto; height: 100%; }
+    #game-view { background: #0b1220; position: relative; border-bottom: 1px solid var(--border); }
+    #game-view iframe { width: 100%; height: 100%; border: none; background: #0b1220; }
+    #console { background: #0a0f1a; color: #9ef0a5; font-family: 'Fira Code', monospace; font-size: 12px; padding: 10px; overflow: auto; height: 170px; }
+    #console .log { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    #console .warn { color: #fcd34d; }
+    #console .error { color: #f87171; }
+    .pill { background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 8px; color: var(--muted); font-size: 12px; }
+    #right h3 { margin: 0; border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <canvas id="game" aria-label="Geometry Dash Clone"></canvas>
-    <div id="hud">
-      <div id="attempt">Attempt: 1</div>
-      <div id="distance">0%</div>
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <h1>Mini 2D Game Engine & IDE</h1>
+      <span class="tag">Single HTML</span>
+      <span class="tag">Hot Reload</span>
     </div>
-    <button id="pause-btn" class="small secondary" aria-label="Pause">Pause</button>
-    <div id="progress-bar"><div id="progress-fill"></div></div>
-
-    <div id="menu" class="overlay">
-      <h1>Geometry Dash Clone</h1>
-      <p>Jump over spikes and gaps to survive! Tap or press Space to jump. Hold to chain jumps.</p>
-      <div class="btn-row">
-        <button id="play-btn">Play</button>
-        <button id="character-btn" class="secondary">Character Select</button>
-      </div>
-      <div class="btn-row">
-        <button id="instructions-btn" class="secondary">How to Play</button>
-        <button id="mute-btn" class="secondary">🔊 Sound</button>
-      </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn play" id="play-btn">▶ Play</button>
+      <button class="btn stop" id="stop-btn">■ Stop</button>
     </div>
-
-    <div id="character-select" class="overlay" style="display:none;">
-      <h1>Select Your Character</h1>
-      <p class="info-text">All characters handle the same. Pick a style you like!</p>
-      <div id="character-grid"></div>
-      <div class="btn-row">
-        <button id="character-confirm">Save &amp; Back</button>
-        <button id="character-back" class="secondary">Back to Menu</button>
+  </header>
+  <main>
+    <section class="panel" id="left">
+      <div id="editor-tabs"></div>
+      <div id="code"><textarea id="code-area"></textarea></div>
+      <div id="file-actions">
+        <button class="btn" id="save-btn">💾 Save</button>
+        <button class="btn" id="add-file-btn">➕ New File</button>
       </div>
-    </div>
-
-    <div id="instructions" class="overlay" style="display:none;">
-      <h1>How to Play</h1>
-      <p>Press Space or click / tap to jump. Hold to keep jumping over consecutive obstacles. Avoid spikes, blocks, and falling into gaps. Reach the end of the level to win!</p>
-      <div class="btn-row">
-        <button id="instructions-back">Back</button>
+      <h3>Assets</h3>
+      <div id="assets"></div>
+    </section>
+    <section class="panel" id="middle">
+      <div class="toolbar">
+        <button class="btn small" id="new-entity-btn">＋ New Entity</button>
+        <span class="pill">Drag to reorder</span>
       </div>
-    </div>
-
-    <div id="pause-menu" class="overlay" style="display:none;">
-      <h1>Paused</h1>
-      <div class="btn-row">
-        <button id="resume-btn">Resume</button>
-        <button id="restart-btn" class="secondary">Restart Level</button>
-        <button id="pause-main-btn" class="danger">Main Menu</button>
+      <div style="display:grid; grid-template-rows: 1fr 1fr; min-height:0;">
+        <div>
+          <h3>Scene Hierarchy</h3>
+          <div id="hierarchy"></div>
+        </div>
+        <div>
+          <h3>Inspector</h3>
+          <div id="inspector"></div>
+        </div>
       </div>
-    </div>
-  </div>
-
+    </section>
+    <section class="panel" id="right">
+      <div id="game-panel">
+        <div id="game-view"></div>
+        <h3>Console</h3>
+        <div id="console"></div>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
   <script>
-    // Canvas setup
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('game-container');
-
-    function resizeCanvas() {
-      const rect = container.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      // Reset transform before re-scaling to avoid compounding scale on resize
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Game states
-    const STATE_MENU = 'menu';
-    const STATE_CHARACTER = 'character';
-    const STATE_INSTRUCTIONS = 'instructions';
-    const STATE_PLAYING = 'playing';
-    const STATE_PAUSED = 'paused';
-
-    let currentState = STATE_MENU;
-
-    // UI elements
-    const menu = document.getElementById('menu');
-    const characterScreen = document.getElementById('character-select');
-    const instructionsScreen = document.getElementById('instructions');
-    const pauseMenu = document.getElementById('pause-menu');
-    const attemptLabel = document.getElementById('attempt');
-    const distanceLabel = document.getElementById('distance');
-    const progressFill = document.getElementById('progress-fill');
-    const pauseBtn = document.getElementById('pause-btn');
-
-    // Character options (purely cosmetic)
-    const characters = [
-      { id: 'sunset', color: '#ff7f50', eye: '#0b1c2c', border: '#ffd1a4', trail: '#ff9f68' },
-      { id: 'aqua', color: '#5efce8', eye: '#0d2030', border: '#bdfcf2', trail: '#40c9ff' },
-      { id: 'lime', color: '#7bed9f', eye: '#0b1c2c', border: '#d4ffd4', trail: '#2ed573' },
-      { id: 'violet', color: '#a48bff', eye: '#0b1c2c', border: '#e6dcff', trail: '#736efe' }
-    ];
-
-    let selectedCharacter = localStorage.getItem('gd-character') || characters[0].id;
-
-    // Sound manager using Web Audio API
-    class SoundManager {
-      constructor() {
-        this.audioCtx = null;
-        this.muted = localStorage.getItem('gd-muted') === 'true';
-        this.musicOsc = null;
-        this.musicGain = null;
-      }
-
-      ensureContext() {
-        if (!this.audioCtx) {
-          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (this.audioCtx.state === 'suspended') {
-          this.audioCtx.resume();
-        }
-      }
-
-      playTone(frequency, duration, type = 'square', volume = 0.2) {
-        if (this.muted) return;
-        this.ensureContext();
-        const osc = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = frequency;
-        gain.gain.value = volume;
-        osc.connect(gain).connect(this.audioCtx.destination);
-        osc.start();
-        osc.stop(this.audioCtx.currentTime + duration);
-      }
-
-      playJump() {
-        this.playTone(620, 0.08, 'square', 0.25);
-      }
-
-      playDeath() {
-        this.playTone(120, 0.25, 'sawtooth', 0.2);
-      }
-
-      startMusic() {
-        if (this.muted) return;
-        this.ensureContext();
-        this.stopMusic();
-        this.musicGain = this.audioCtx.createGain();
-        this.musicGain.gain.value = 0.1;
-        this.musicGain.connect(this.audioCtx.destination);
-
-        // Simple looping melody with two oscillators
-        const osc1 = this.audioCtx.createOscillator();
-        osc1.type = 'triangle';
-        osc1.frequency.setValueAtTime(180, this.audioCtx.currentTime);
-        osc1.frequency.linearRampToValueAtTime(200, this.audioCtx.currentTime + 1.6);
-        osc1.frequency.linearRampToValueAtTime(180, this.audioCtx.currentTime + 3.2);
-
-        const osc2 = this.audioCtx.createOscillator();
-        osc2.type = 'square';
-        osc2.frequency.value = 90;
-
-        osc1.connect(this.musicGain);
-        osc2.connect(this.musicGain);
-        osc1.start();
-        osc2.start();
-
-        this.musicOsc = [osc1, osc2];
-      }
-
-      stopMusic() {
-        if (this.musicOsc) {
-          this.musicOsc.forEach(o => {
-            try { o.stop(); } catch (e) {}
-          });
-          this.musicOsc = null;
-        }
-      }
-
-      toggleMute() {
-        this.muted = !this.muted;
-        localStorage.setItem('gd-muted', this.muted);
-        if (this.muted) {
-          this.stopMusic();
-        } else {
-          this.startMusic();
-        }
-        updateMuteButton();
-      }
-    }
-
-    const sounds = new SoundManager();
-
-    // Player and level data
-    const groundHeight = 90; // px from bottom
-    const gravity = 1500;
-    const jumpVelocity = -600;
-    const speed = 240;
-
-    const player = {
-      x: 120,
-      y: 0,
-      width: 40,
-      height: 40,
-      vy: 0,
-      grounded: false,
-      trail: []
+    // --- Virtual project files ---
+    const projectFiles = {
+      'main.js': `// Main entry\nregisterMain(({ Engine, Scene, Entity, Components, Assets, helpers, initialScene }) => {\n  const canvas = document.getElementById('game');\n  const scene = new Scene('Demo');\n  helpers.populateScene(initialScene, scene);\n  Engine.start(canvas, scene);\n});`,
+      'player.js': `// Player movement script\nexports.onStart = (entity, { Components }) => {\n  entity.addComponent('RigidBody', { gravity: 900, friction: 0.85 });\n  entity.addComponent('KeyboardInput', {});\n};\n\nexports.onUpdate = (entity, dt) => {\n  const rb = entity.getComponent('RigidBody');\n  const input = entity.getComponent('KeyboardInput');\n  const move = 220;\n  if (input.isDown('ArrowLeft') || input.isDown('KeyA')) rb.velocity.x = -move;\n  if (input.isDown('ArrowRight') || input.isDown('KeyD')) rb.velocity.x = move;\n  if ((input.isDown('ArrowUp') || input.isDown('Space') || input.isDown('KeyW')) && rb.onGround) {\n    rb.velocity.y = -420;\n    rb.onGround = false;\n  }\n};`,
+      'hay.js': `// Hay bale behavior\nexports.onStart = (entity) => { entity.isHay = true; };\nexports.onCollisionEnter = (self, other, scene) => {\n  if (other.name === 'Player') {\n    scene.removeEntity(self);\n    scene.money = (scene.money || 0) + 1;\n    console.log('Hay collected! Money: ' + scene.money);\n  }\n};`
     };
 
-    let cameraX = 0;
-    let attempt = 1;
-    let jumpHeld = false;
-    let levelLength = 3200;
+    const assetStore = [
+      { name: 'player', url: 'https://dummyimage.com/96x96/38bdf8/0b1220&text=P' },
+      { name: 'hay', url: 'https://dummyimage.com/96x96/f59e0b/0b1220&text=H' },
+      { name: 'ground', url: 'https://dummyimage.com/96x32/22c55e/0b1220&text=G' }
+    ];
 
-    // Define level obstacles
-    const obstacles = [];
-    function addSpike(x, width = 40, height = 60) {
-      obstacles.push({ type: 'spike', x, width, height });
-    }
-    function addBlock(x, width, height) {
-      obstacles.push({ type: 'block', x, width, height });
-    }
-    function addGap(x, width) {
-      obstacles.push({ type: 'gap', x, width });
-    }
+    // --- Editor State ---
+    let currentFile = 'main.js';
+    let editor = null;
+    let iframe = null;
+    let selectedEntityId = null;
+    let sceneData = {
+      entities: [
+        { id: 'player', name: 'Player', transform: { x: 120, y: 220, rotation: 0, scaleX: 1, scaleY: 1 }, components: { SpriteRenderer: { color: '#38bdf8', width: 40, height: 40, sprite: 'player' }, BoxCollider: { width: 36, height: 36 }, Script: { file: 'player.js' } } },
+        { id: 'hay1', name: 'Hay 1', transform: { x: 340, y: 260, rotation: 0, scaleX: 1, scaleY: 1 }, components: { SpriteRenderer: { color: '#f59e0b', width: 40, height: 40, sprite: 'hay' }, BoxCollider: { width: 36, height: 36 }, Script: { file: 'hay.js' } } },
+        { id: 'hay2', name: 'Hay 2', transform: { x: 420, y: 260, rotation: 0, scaleX: 1, scaleY: 1 }, components: { SpriteRenderer: { color: '#f59e0b', width: 40, height: 40, sprite: 'hay' }, BoxCollider: { width: 36, height: 36 }, Script: { file: 'hay.js' } } },
+        { id: 'hay3', name: 'Hay 3', transform: { x: 500, y: 260, rotation: 0, scaleX: 1, scaleY: 1 }, components: { SpriteRenderer: { color: '#f59e0b', width: 40, height: 40, sprite: 'hay' }, BoxCollider: { width: 36, height: 36 }, Script: { file: 'hay.js' } } },
+        { id: 'ground', name: 'Ground', transform: { x: 320, y: 320, rotation: 0, scaleX: 7, scaleY: 1 }, components: { SpriteRenderer: { color: '#22c55e', width: 60, height: 20, sprite: 'ground' }, BoxCollider: { width: 420, height: 20 }, RigidBody: { gravity: 0, friction: 1 } } }
+      ]
+    };
 
-    function buildLevel() {
-      obstacles.length = 0;
-      let x = 300;
-      addSpike(x); x += 160;
-      addSpike(x); x += 120;
-      addBlock(x, 80, 40); x += 200;
-      addGap(x, 140); x += 260;
-      addSpike(x); x += 100;
-      addBlock(x, 100, 60); x += 160;
-      addSpike(x); x += 80;
-      addSpike(x + 50); x += 230;
-      addGap(x, 200); x += 320;
-      addBlock(x, 120, 40); x += 180;
-      addSpike(x, 50, 70); x += 140;
-      addSpike(x + 40); x += 260;
-      addGap(x, 220); x += 320;
-      addBlock(x, 140, 60); x += 220;
-      addSpike(x); x += 120;
-      levelLength = x + 400;
-    }
-
-    buildLevel();
-
-    function resetPlayer() {
-      player.x = 120;
-      player.y = canvas.height / (window.devicePixelRatio || 1) - groundHeight - player.height;
-      player.vy = 0;
-      player.grounded = false;
-      player.trail = [];
-      cameraX = 0;
-    }
-
-    resetPlayer();
-
-    // Input handling
-    function setJump(state) {
-      jumpHeld = state;
-      if (state && player.grounded && currentState === STATE_PLAYING) {
-        jump();
-      }
-    }
-
-    function jump() {
-      player.vy = jumpVelocity;
-      player.grounded = false;
-      sounds.playJump();
-    }
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        setJump(true);
-      }
-      if (e.code === 'Escape' && currentState === STATE_PLAYING) {
-        pauseGame();
-      }
-    });
-
-    window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        setJump(false);
-      }
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      setJump(true);
-    });
-    canvas.addEventListener('mouseup', () => setJump(false));
-    canvas.addEventListener('mouseleave', () => setJump(false));
-
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      setJump(true);
-    }, { passive: false });
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      setJump(false);
-    }, { passive: false });
-
-    // Button wiring
-    document.getElementById('play-btn').addEventListener('click', () => startGame());
-    document.getElementById('character-btn').addEventListener('click', () => showCharacterSelect());
-    document.getElementById('instructions-btn').addEventListener('click', () => showInstructions());
-    document.getElementById('instructions-back').addEventListener('click', () => goToMenu());
-    document.getElementById('character-back').addEventListener('click', () => goToMenu());
-    document.getElementById('character-confirm').addEventListener('click', () => {
-      localStorage.setItem('gd-character', selectedCharacter);
-      goToMenu();
-    });
-    document.getElementById('mute-btn').addEventListener('click', () => sounds.toggleMute());
-    pauseBtn.addEventListener('click', () => {
-      if (currentState === STATE_PLAYING) pauseGame();
-    });
-    document.getElementById('resume-btn').addEventListener('click', () => resumeGame());
-    document.getElementById('restart-btn').addEventListener('click', () => restartLevel());
-    document.getElementById('pause-main-btn').addEventListener('click', () => goToMenu());
-
-    function updateMuteButton() {
-      const btn = document.getElementById('mute-btn');
-      btn.textContent = sounds.muted ? '🔇 Muted' : '🔊 Sound';
-    }
-    updateMuteButton();
-
-    // Character select rendering
-    const grid = document.getElementById('character-grid');
-    function drawCharacterCard(char) {
-      const card = document.createElement('div');
-      card.className = 'character-card';
-      card.dataset.id = char.id;
-
-      const preview = document.createElement('div');
-      preview.className = 'character-preview';
-      preview.style.background = char.color;
-      preview.style.border = `4px solid ${char.border}`;
-
-      // Simple face
-      const eye = document.createElement('div');
-      eye.style.width = '14px';
-      eye.style.height = '14px';
-      eye.style.borderRadius = '50%';
-      eye.style.background = char.eye;
-      eye.style.boxShadow = '18px 0 0 ' + char.eye;
-
-      preview.appendChild(eye);
-
-      const trail = document.createElement('div');
-      trail.style.position = 'absolute';
-      trail.style.left = '-30%';
-      trail.style.right = '60%';
-      trail.style.top = '35%';
-      trail.style.bottom = '35%';
-      trail.style.background = char.trail;
-      trail.style.filter = 'blur(8px)';
-      preview.appendChild(trail);
-
-      const label = document.createElement('div');
-      label.textContent = char.id.toUpperCase();
-      label.style.fontSize = '13px';
-      label.style.letterSpacing = '1px';
-      label.style.color = 'var(--text)';
-
-      card.appendChild(preview);
-      card.appendChild(label);
-
-      card.addEventListener('click', () => {
-        selectedCharacter = char.id;
-        highlightSelection();
+    // --- Editor Helpers ---
+    function initEditor() {
+      renderTabs();
+      editor = CodeMirror.fromTextArea(document.getElementById('code-area'), {
+        mode: 'javascript',
+        lineNumbers: true,
+        theme: 'default'
       });
-
-      return card;
+      editor.setValue(projectFiles[currentFile]);
+      editor.on('change', debounce(() => projectFiles[currentFile] = editor.getValue(), 150));
+      renderAssets();
+      renderHierarchy();
+      renderInspector();
     }
 
-    function highlightSelection() {
-      document.querySelectorAll('.character-card').forEach(card => {
-        card.classList.toggle('selected', card.dataset.id === selectedCharacter);
+    function debounce(fn, t){ let id; return (...a)=>{ clearTimeout(id); id=setTimeout(()=>fn(...a), t); }; }
+
+    function renderTabs() {
+      const tabs = document.getElementById('editor-tabs');
+      tabs.innerHTML = '';
+      Object.keys(projectFiles).forEach(file => {
+        const btn = document.createElement('button');
+        btn.textContent = file;
+        if (file === currentFile) btn.classList.add('active');
+        btn.onclick = () => { saveCurrent(); currentFile = file; renderTabs(); editor.setValue(projectFiles[file]); };
+        tabs.appendChild(btn);
       });
     }
 
-    function populateCharacters() {
-      grid.innerHTML = '';
-      characters.forEach(char => grid.appendChild(drawCharacterCard(char)));
-      highlightSelection();
+    function saveCurrent() { if (editor) projectFiles[currentFile] = editor.getValue(); }
+
+    document.getElementById('save-btn').onclick = saveCurrent;
+    document.getElementById('add-file-btn').onclick = () => {
+      const name = prompt('File name (e.g., enemy.js)');
+      if (!name) return;
+      if (projectFiles[name]) return alert('File exists');
+      projectFiles[name] = '// new script';
+      currentFile = name;
+      renderTabs();
+      editor.setValue(projectFiles[name]);
+    };
+
+    function renderAssets() {
+      const wrap = document.getElementById('assets');
+      wrap.innerHTML = '';
+      assetStore.forEach(a => {
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+        card.innerHTML = `<img src="${a.url}" alt="${a.name}"><div>${a.name}</div>`;
+        wrap.appendChild(card);
+      });
     }
 
-    populateCharacters();
-
-    // State helpers
-    function goToMenu() {
-      currentState = STATE_MENU;
-      menu.style.display = 'flex';
-      characterScreen.style.display = 'none';
-      instructionsScreen.style.display = 'none';
-      pauseMenu.style.display = 'none';
-      pauseBtn.style.display = 'none';
-      sounds.startMusic();
+    function renderHierarchy() {
+      const container = document.getElementById('hierarchy');
+      container.innerHTML = '<ul></ul>';
+      const ul = container.querySelector('ul');
+      sceneData.entities.forEach((e, idx) => {
+        const li = document.createElement('li');
+        li.draggable = true;
+        li.dataset.id = e.id;
+        li.innerHTML = `<span>${e.name}</span><span class="pill">${Object.keys(e.components||{}).length} comps</span>`;
+        if (selectedEntityId === e.id) li.classList.add('selected');
+        li.onclick = () => { selectedEntityId = e.id; renderHierarchy(); renderInspector(); highlightEntity(e.id); };
+        li.addEventListener('dragstart', ev => ev.dataTransfer.setData('text/plain', e.id));
+        li.addEventListener('dragover', ev => ev.preventDefault());
+        li.addEventListener('drop', ev => {
+          ev.preventDefault();
+          const from = ev.dataTransfer.getData('text/plain');
+          const fromIdx = sceneData.entities.findIndex(en => en.id === from);
+          const toIdx = idx;
+          if (fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
+            const [item] = sceneData.entities.splice(fromIdx,1);
+            sceneData.entities.splice(toIdx,0,item);
+            renderHierarchy();
+          }
+        });
+        ul.appendChild(li);
+      });
     }
 
-    function showCharacterSelect() {
-      currentState = STATE_CHARACTER;
-      menu.style.display = 'none';
-      characterScreen.style.display = 'flex';
-      instructionsScreen.style.display = 'none';
-      pauseMenu.style.display = 'none';
-      pauseBtn.style.display = 'none';
-    }
+    document.getElementById('new-entity-btn').onclick = () => {
+      const id = 'entity_' + Math.random().toString(36).slice(2,6);
+      sceneData.entities.push({ id, name: 'Entity ' + sceneData.entities.length, transform: { x: 100, y: 100, rotation: 0, scaleX: 1, scaleY: 1 }, components: { SpriteRenderer: { color: '#94a3b8', width: 32, height: 32 } } });
+      selectedEntityId = id;
+      renderHierarchy();
+      renderInspector();
+    };
 
-    function showInstructions() {
-      currentState = STATE_INSTRUCTIONS;
-      menu.style.display = 'none';
-      instructionsScreen.style.display = 'flex';
-      characterScreen.style.display = 'none';
-      pauseMenu.style.display = 'none';
-      pauseBtn.style.display = 'none';
-    }
-
-    function startGame() {
-      attempt = 1;
-      attemptLabel.textContent = `Attempt: ${attempt}`;
-      resetPlayer();
-      currentState = STATE_PLAYING;
-      menu.style.display = 'none';
-      characterScreen.style.display = 'none';
-      instructionsScreen.style.display = 'none';
-      pauseMenu.style.display = 'none';
-      pauseBtn.style.display = 'block';
-      sounds.startMusic();
-    }
-
-    function restartLevel() {
-      attempt++;
-      attemptLabel.textContent = `Attempt: ${attempt}`;
-      resetPlayer();
-      resumeGame();
-    }
-
-    function pauseGame() {
-      currentState = STATE_PAUSED;
-      pauseMenu.style.display = 'flex';
-    }
-
-    function resumeGame() {
-      currentState = STATE_PLAYING;
-      pauseMenu.style.display = 'none';
-    }
-
-    // Physics helpers
-    function isOverGap(xPos) {
-      return obstacles.some(o => o.type === 'gap' && xPos + player.width > o.x && xPos < o.x + o.width);
-    }
-
-    function rectIntersect(a, b) {
-      return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-    }
-
-    function spikeIntersect(rect, spike) {
-      // Triangle points
-      const ax = spike.x;
-      const ay = groundY();
-      const bx = spike.x + spike.width / 2;
-      const by = groundY() - spike.height;
-      const cx = spike.x + spike.width;
-      const cy = groundY();
-
-      // Check all four corners of the player within triangle using barycentric technique
-      const points = [
-        { x: rect.x, y: rect.y },
-        { x: rect.x + rect.width, y: rect.y },
-        { x: rect.x, y: rect.y + rect.height },
-        { x: rect.x + rect.width, y: rect.y + rect.height }
+    function renderInspector() {
+      const panel = document.getElementById('inspector');
+      panel.innerHTML = '';
+      const entity = sceneData.entities.find(e => e.id === selectedEntityId) || sceneData.entities[0];
+      if (!entity) return;
+      selectedEntityId = entity.id;
+      const rows = [
+        ['Name', 'text', entity.name, v => entity.name = v],
+        ['X', 'number', entity.transform.x, v => entity.transform.x = parseFloat(v)],
+        ['Y', 'number', entity.transform.y, v => entity.transform.y = parseFloat(v)],
+        ['Rotation', 'number', entity.transform.rotation, v => entity.transform.rotation = parseFloat(v)],
+        ['Scale X', 'number', entity.transform.scaleX, v => entity.transform.scaleX = parseFloat(v)],
+        ['Scale Y', 'number', entity.transform.scaleY, v => entity.transform.scaleY = parseFloat(v)]
       ];
-
-      const area = Math.abs((ax*(by-cy) + bx*(cy-ay) + cx*(ay-by)) / 2);
-      for (const p of points) {
-        const area1 = Math.abs((p.x*(by-cy) + bx*(cy-p.y) + cx*(p.y-by)) / 2);
-        const area2 = Math.abs((ax*(p.y-cy) + p.x*(cy-ay) + cx*(ay-p.y)) / 2);
-        const area3 = Math.abs((ax*(by-p.y) + bx*(p.y-ay) + p.x*(ay-by)) / 2);
-        if (Math.abs(area - (area1 + area2 + area3)) < 0.5) return true;
-      }
-      return false;
-    }
-
-    function groundY() {
-      return canvas.getBoundingClientRect().height - groundHeight;
-    }
-
-    function collisionCheck() {
-      const rect = { x: player.x, y: player.y, width: player.width, height: player.height };
-
-      // Ground collision only if not above a gap
-      if (!isOverGap(player.x + player.width / 2)) {
-        const ground = groundY() - player.height;
-        if (player.y >= ground) {
-          player.y = ground;
-          player.vy = 0;
-          player.grounded = true;
-        }
-      }
-
-      for (const o of obstacles) {
-        if (o.type === 'block') {
-          const blockRect = { x: o.x, y: groundY() - o.height, width: o.width, height: o.height };
-          if (rectIntersect(rect, blockRect)) {
-            // Basic collision response: place player on top if falling
-            if (player.vy >= 0 && rect.y + rect.height - player.vy * dt <= blockRect.y) {
-              player.y = blockRect.y - player.height;
-              player.vy = 0;
-              player.grounded = true;
-            } else {
-              return true;
-            }
-          }
-        } else if (o.type === 'spike') {
-          if (rectIntersect(rect, { x: o.x, y: groundY() - o.height, width: o.width, height: o.height }) && spikeIntersect(rect, o)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    function reachedGoal() {
-      return player.x >= levelLength;
-    }
-
-    // Game loop
-    let lastTime = 0;
-    let dt = 0;
-    function loop(timestamp) {
-      dt = (timestamp - lastTime) / 1000 || 0;
-      lastTime = timestamp;
-
-      if (currentState === STATE_PLAYING) {
-        update(dt);
-        render();
-      } else {
-        render();
-      }
-
-      requestAnimationFrame(loop);
-    }
-
-    function update(dt) {
-      // Horizontal motion
-      player.x += speed * dt;
-
-      // Vertical motion
-      player.vy += gravity * dt;
-      player.y += player.vy * dt;
-
-      // Automatic jump if holding input and grounded
-      if (jumpHeld && player.grounded) {
-        jump();
-      }
-
-      // Prevent falling through floor when over solid ground
-      if (!isOverGap(player.x + player.width / 2)) {
-        const ground = groundY() - player.height;
-        if (player.y > ground) {
-          player.y = ground;
-          player.vy = 0;
-          player.grounded = true;
-        }
-      } else {
-        player.grounded = false;
-      }
-
-      // Collisions with obstacles
-      const dead = collisionCheck();
-      if (dead || player.y > canvas.getBoundingClientRect().height) {
-        sounds.playDeath();
-        restartLevel();
-        return;
-      }
-
-      // Goal reached
-      if (reachedGoal()) {
-        // Simple victory: loop the level with a new attempt count reset
-        attempt = 1;
-        levelCompleteFlash = 1;
-        resetPlayer();
-      }
-
-      // Camera follows player
-      cameraX = player.x - 150;
-
-      // HUD updates
-      const progress = Math.min(player.x / levelLength, 1);
-      distanceLabel.textContent = `${Math.floor(progress * 100)}%`;
-      progressFill.style.width = `${Math.floor(progress * 100)}%`;
-
-      // Particle trail
-      const char = characters.find(c => c.id === selectedCharacter) || characters[0];
-      player.trail.unshift({ x: player.x, y: player.y + player.height / 2, life: 0.5, color: char.trail });
-      if (player.trail.length > 40) player.trail.pop();
-    }
-
-    let levelCompleteFlash = 0;
-
-    function renderBackground() {
-      const { width, height } = canvas.getBoundingClientRect();
-      const grad = ctx.createLinearGradient(0, 0, 0, height);
-      grad.addColorStop(0, '#0f1025');
-      grad.addColorStop(1, '#16284b');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
-
-      // Moving parallax dots
-      ctx.fillStyle = 'rgba(255,255,255,0.1)';
-      for (let i = 0; i < 80; i++) {
-        const px = (i * 80 + cameraX * 0.2) % (width + 80) - 40;
-        const py = (i * 37) % height;
-        ctx.beginPath();
-        ctx.arc(px, py, 2 + (i % 3) * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawGround() {
-      const { width } = canvas.getBoundingClientRect();
-      const y = groundY();
-      ctx.fillStyle = '#0d1a2c';
-      ctx.fillRect(0, y, width, groundHeight);
-      ctx.fillStyle = '#243b55';
-      ctx.fillRect(0, y, width, 6);
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-      ctx.lineWidth = 1;
-      for (let gx = -((cameraX % 40)); gx < width; gx += 40) {
-        ctx.beginPath();
-        ctx.moveTo(gx, y);
-        ctx.lineTo(gx + 10, y + groundHeight);
-        ctx.stroke();
-      }
-    }
-
-    function drawObstacles() {
-      const { width } = canvas.getBoundingClientRect();
-      const char = characters.find(c => c.id === selectedCharacter) || characters[0];
-      const viewStart = cameraX - 80;
-      const viewEnd = cameraX + width + 80;
-
-      obstacles.forEach(o => {
-        if (o.x + o.width < viewStart || o.x > viewEnd) return;
-        if (o.type === 'block') {
-          ctx.fillStyle = '#ff6b6b';
-          ctx.strokeStyle = '#ffc6c6';
-          const x = o.x - cameraX;
-          const y = groundY() - o.height;
-          ctx.fillRect(x, y, o.width, o.height);
-          ctx.strokeRect(x, y, o.width, o.height);
-        } else if (o.type === 'spike') {
-          const x = o.x - cameraX;
-          const baseY = groundY();
-          ctx.fillStyle = '#ffa94d';
-          ctx.strokeStyle = '#ffd8a8';
-          ctx.beginPath();
-          ctx.moveTo(x, baseY);
-          ctx.lineTo(x + o.width / 2, baseY - o.height);
-          ctx.lineTo(x + o.width, baseY);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
+      rows.forEach(([label, type, value, onChange]) => {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<label>${label}</label><input type="${type}" value="${value}">`;
+        wrap.querySelector('input').oninput = e => { onChange(e.target.value); renderHierarchy(); };
+        panel.appendChild(wrap);
       });
 
-      // Simple finish line
-      ctx.fillStyle = char.trail;
-      const finishX = levelLength - cameraX;
-      ctx.fillRect(finishX, groundY() - 120, 12, 120);
+      // Sprite renderer
+      const sr = entity.components.SpriteRenderer || { color: '#94a3b8', width: 32, height: 32 };
+      entity.components.SpriteRenderer = sr;
+      const spriteWrap = document.createElement('div');
+      spriteWrap.style.gridColumn = '1 / span 2';
+      spriteWrap.innerHTML = `
+        <label>Sprite Renderer</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+          <input type="color" value="${sr.color || '#ffffff'}" title="Color">
+          <input type="number" value="${sr.width||32}" title="Width">
+          <input type="number" value="${sr.height||32}" title="Height">
+          <select title="Sprite">${assetStore.map(a=>`<option value="${a.name}" ${sr.sprite===a.name?'selected':''}>${a.name}</option>`).join('')}</select>
+        </div>`;
+      const [color,width,height,sel] = spriteWrap.querySelectorAll('input,select');
+      color.oninput = e => sr.color = e.target.value;
+      width.oninput = e => sr.width = parseFloat(e.target.value);
+      height.oninput = e => sr.height = parseFloat(e.target.value);
+      sel.onchange = e => sr.sprite = e.target.value;
+      panel.appendChild(spriteWrap);
+
+      // Collider
+      const col = entity.components.BoxCollider || { width: sr.width || 32, height: sr.height || 32 };
+      entity.components.BoxCollider = col;
+      const colWrap = document.createElement('div');
+      colWrap.style.gridColumn = '1 / span 2';
+      colWrap.innerHTML = `
+        <label>Box Collider</label>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+          <input type="number" value="${col.width||32}" title="Width">
+          <input type="number" value="${col.height||32}" title="Height">
+        </div>`;
+      const [cw,ch] = colWrap.querySelectorAll('input');
+      cw.oninput = e => col.width = parseFloat(e.target.value);
+      ch.oninput = e => col.height = parseFloat(e.target.value);
+      panel.appendChild(colWrap);
+
+      // Script assignment
+      const sc = entity.components.Script || { file: '' };
+      entity.components.Script = sc;
+      const scWrap = document.createElement('div');
+      scWrap.style.gridColumn = '1 / span 2';
+      scWrap.innerHTML = `
+        <label>Script File</label>
+        <select>${Object.keys(projectFiles).map(f=>`<option value="${f}" ${sc.file===f?'selected':''}>${f}</option>`).join('')}</select>`;
+      scWrap.querySelector('select').onchange = e => sc.file = e.target.value;
+      panel.appendChild(scWrap);
     }
 
-    function drawPlayer() {
-      const { width } = canvas.getBoundingClientRect();
-      const char = characters.find(c => c.id === selectedCharacter) || characters[0];
-
-      // Draw trail particles
-      player.trail.forEach(p => {
-        const x = p.x - cameraX;
-        const y = p.y;
-        ctx.fillStyle = `rgba(${hexToRgb(p.color)}, ${Math.max(0, p.life)})`;
-        ctx.beginPath();
-        ctx.arc(x, y, 8 * p.life, 0, Math.PI * 2);
-        ctx.fill();
-        p.life -= dt * 2;
-      });
-
-      const x = player.x - cameraX;
-      const y = player.y;
-      ctx.fillStyle = char.color;
-      ctx.strokeStyle = char.border;
-      ctx.lineWidth = 4;
-      ctx.fillRect(x, y, player.width, player.height);
-      ctx.strokeRect(x, y, player.width, player.height);
-
-      // Face
-      ctx.fillStyle = char.eye;
-      ctx.beginPath();
-      ctx.arc(x + 12, y + 16, 6, 0, Math.PI * 2);
-      ctx.arc(x + 28, y + 16, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#0b1c2c';
-      ctx.fillRect(x + 10, y + 26, 20, 6);
+    function highlightEntity(id) {
+      const items = document.querySelectorAll('#hierarchy li');
+      items.forEach(li => li.classList.toggle('selected', li.dataset.id === id));
     }
 
-    function hexToRgb(hex) {
-      const value = hex.replace('#', '');
-      const bigint = parseInt(value, 16);
-      const r = (bigint >> 16) & 255;
-      const g = (bigint >> 8) & 255;
-      const b = bigint & 255;
-      return `${r}, ${g}, ${b}`;
+    // --- Runtime ---
+    document.getElementById('play-btn').onclick = runGame;
+    document.getElementById('stop-btn').onclick = stopGame;
+
+    function stopGame() {
+      if (iframe) iframe.remove();
+      iframe = null;
     }
 
-    function render() {
-      renderBackground();
-      drawObstacles();
-      drawGround();
-      drawPlayer();
+    function runGame() {
+      saveCurrent();
+      stopGame();
+      iframe = document.createElement('iframe');
+      iframe.setAttribute('sandbox', 'allow-scripts');
+      document.getElementById('game-view').innerHTML = '';
+      document.getElementById('game-view').appendChild(iframe);
+      const runtimeHTML = buildRuntimeHTML();
+      iframe.srcdoc = runtimeHTML;
+    }
 
-      if (levelCompleteFlash > 0) {
-        const { width, height } = canvas.getBoundingClientRect();
-        ctx.fillStyle = `rgba(255, 255, 255, ${levelCompleteFlash})`;
-        ctx.fillRect(0, 0, width, height);
-        levelCompleteFlash -= dt;
+    function buildRuntimeHTML() {
+      const scripts = Object.entries(projectFiles).map(([name, code]) => `// ${name}\n` + code).join('\n\n');
+      const assetsJSON = JSON.stringify(assetStore);
+      const sceneJSON = JSON.stringify(sceneData);
+      return `<!DOCTYPE html><html><head><style>body{margin:0;background:#0b1220;color:#fff;font-family:Inter,sans-serif;}#game{width:100%;height:100%;background:#0b1220;display:block;}canvas{background:#0b1220;}::-webkit-scrollbar{display:none}</style></head><body><canvas id="game"></canvas><script>const parentConsole = parent; const logs=[]; const forward=(type,...args)=>{parentConsole.postMessage({type:'console',level:type,content:args.map(a=>typeof a==='object'?JSON.stringify(a):a).join(' ')},'*');};['log','warn','error'].forEach(k=>{const o=console[k];console[k]=function(...a){forward(k,...a); return o.apply(console,a);};});</script><script>${engineCode()}</script><script>const projectFiles = ${JSON.stringify(projectFiles)}; const assetManifest=${assetsJSON}; const initialScene=${sceneJSON}; ${scripts}; setupRuntime(projectFiles, assetManifest, initialScene);</script></body></html>`;
+    }
+
+    window.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'console') appendConsole(ev.data.level, ev.data.content);
+    });
+
+    function appendConsole(level, msg) {
+      const c = document.getElementById('console');
+      const div = document.createElement('div');
+      div.className = 'log ' + level;
+      div.textContent = msg;
+      c.appendChild(div);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    function engineCode() {
+      return `(() => {
+  // Math utilities
+  class Vector2 { constructor(x=0,y=0){this.x=x;this.y=y;} add(v){this.x+=v.x;this.y+=v.y;return this;} clone(){return new Vector2(this.x,this.y);} }
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  class Rect { constructor(x,y,w,h){this.x=x;this.y=y;this.w=w;this.h=h;} intersects(o){return !(this.x>o.x+o.w||this.x+this.w<o.x||this.y>o.y+o.h||this.y+this.h<o.y);} }
+
+  // Asset Manager
+  class AssetManager {
+    constructor(){this.images=new Map();}
+    loadImage(name,url){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{this.images.set(name,img);res(img);};img.onerror=rej;img.src=url;});}
+    getImage(name){return this.images.get(name);} }
+
+  // Components
+  class Component { constructor(entity){this.entity=entity;} onStart(){} onUpdate(){} draw(){} }
+  class SpriteRenderer extends Component {
+    constructor(entity, cfg={}){super(entity);this.color=cfg.color||'#fff';this.width=cfg.width||32;this.height=cfg.height||32;this.sprite=cfg.sprite;}
+    draw(ctx){const t=this.entity.transform;ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.rotation*Math.PI/180);ctx.scale(t.scaleX,t.scaleY);const img=this.entity.scene.assets.getImage(this.sprite);if(img){ctx.drawImage(img,-this.width/2,-this.height/2,this.width,this.height);}else{ctx.fillStyle=this.color;ctx.fillRect(-this.width/2,-this.height/2,this.width,this.height);}ctx.restore();}
+  }
+  class RigidBody extends Component {
+    constructor(entity,cfg={}){super(entity);this.velocity=new Vector2(cfg.vx||0,cfg.vy||0);this.gravity=cfg.gravity??900;this.friction=cfg.friction??0.9;this.onGround=false;}
+    onUpdate(dt){this.velocity.y+=this.gravity*dt;this.velocity.x*=this.friction;const t=this.entity.transform;t.x+=this.velocity.x*dt; t.y+=this.velocity.y*dt;}
+  }
+  class BoxCollider extends Component {
+    constructor(entity,cfg={}){super(entity);this.width=cfg.width||32;this.height=cfg.height||32;}
+    get rect(){const t=this.entity.transform;return new Rect(t.x-this.width/2,t.y-this.height/2,this.width,this.height);} }
+  class KeyboardInput extends Component {
+    constructor(entity){super(entity);this.keys=new Set();this._down=e=>this.keys.add(e.code);this._up=e=>this.keys.delete(e.code);window.addEventListener('keydown',this._down);window.addEventListener('keyup',this._up);}
+    isDown(code){return this.keys.has(code);} }
+  class Script extends Component {
+    constructor(entity,cfg={}){super(entity);this.module=cfg.module;}
+    onStart(){this.module?.onStart?.(this.entity,{Components,Assets:this.entity.scene.assets});}
+    onUpdate(dt){this.module?.onUpdate?.(this.entity,dt,{Components,Assets:this.entity.scene.assets});}
+    onCollisionEnter(o){this.module?.onCollisionEnter?.(this.entity,o,this.entity.scene);} onCollisionStay(o){this.module?.onCollisionStay?.(this.entity,o,this.entity.scene);} }
+
+  const Components={SpriteRenderer,RigidBody,BoxCollider,KeyboardInput,Script};
+
+  class Entity {
+    constructor(name){this.name=name;this.transform={x:0,y:0,rotation:0,scaleX:1,scaleY:1};this.components=[];this.scene=null;}
+    addComponent(type,cfg={}){const C=Components[type];if(!C) throw new Error('Unknown component '+type);const c=new C(this,cfg);this.components.push(c);return c;}
+    getComponent(type){return this.components.find(c=>c.constructor.name===type);}    update(dt){this.components.forEach(c=>c.onUpdate?.(dt));}
+    draw(ctx){this.components.forEach(c=>c.draw?.(ctx));}
+  }
+
+  class Scene {
+    constructor(name){this.name=name;this.entities=[];this.assets=null;this.money=0;}
+    addEntity(e){e.scene=this;this.entities.push(e);} removeEntity(e){this.entities=this.entities.filter(x=>x!==e);} findByName(n){return this.entities.find(e=>e.name===n);} load(){this.entities.forEach(e=>e.components.forEach(c=>c.onStart?.()));}
+    update(dt){for(const e of this.entities) e.update(dt); this.handleCollisions();}
+    handleCollisions(){
+      this._collisions = this._collisions || new Set();
+      const next = new Set();
+      const colliders=this.entities.map(e=>({e,col:e.getComponent('BoxCollider')})).filter(c=>c.col);
+      for(let i=0;i<colliders.length;i++){
+        for(let j=i+1;j<colliders.length;j++){
+          const a=colliders[i],b=colliders[j];
+          if(a.col.rect.intersects(b.col.rect)){
+            const key=a.e.name+'|'+b.e.name;
+            next.add(key);
+            const already=this._collisions.has(key);
+            const call=(method,src,tgt)=>src.components.forEach(c=>c[method]?.(tgt));
+            call(already?'onCollisionStay':'onCollisionEnter', a.e, b.e);
+            call(already?'onCollisionStay':'onCollisionEnter', b.e, a.e);
+            [a,b].forEach(pair=>{
+              const other = pair===a?b:a; const rb = pair.e.getComponent('RigidBody');
+              if(rb){
+                const rect = pair.col.rect; const rectO = other.col.rect;
+                const falling = rb.velocity.y >= 0;
+                if(falling && rect.y+rect.h/2 <= rectO.y){
+                  pair.e.transform.y = rectO.y - pair.col.height/2;
+                  rb.velocity.y = 0; rb.onGround = true;
+                }
+              }
+            });
+          }
+        }
       }
+      this._collisions.forEach(key=>{if(!next.has(key)){const [aName,bName]=key.split('|'); const a=this.findByName(aName), b=this.findByName(bName); if(a&&b){a.components.forEach(c=>c.onCollisionStay?.(b));b.components.forEach(c=>c.onCollisionStay?.(a));}}});
+      this._collisions = next;
+    }
+  }
+
+  const Engine = {
+    running:false, ctx:null, canvas:null, scene:null, last:0, timeScale:1,
+    start(canvas, scene){
+      this.canvas=canvas;this.ctx=canvas.getContext('2d');this.scene=scene;this.running=true;
+      const resize=()=>{canvas.width=canvas.clientWidth;canvas.height=canvas.clientHeight;};
+      window.addEventListener('resize',resize); resize(); scene.load();
+      this.last=performance.now(); requestAnimationFrame(this.loop.bind(this));
+    },
+    stop(){this.running=false;},
+    loop(t){if(!this.running) return; const dt=((t-this.last)/1000)*this.timeScale; this.last=t; this.update(dt); requestAnimationFrame(this.loop.bind(this));},
+    update(dt){const ctx=this.ctx; ctx.clearRect(0,0,this.canvas.width,this.canvas.height); ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,this.canvas.width,this.canvas.height); this.scene.update(dt); this.scene.entities.forEach(e=>e.draw(ctx));}
+  };
+
+  function buildSceneFromData(data, scripts){
+    const scene=new Scene('Runtime');
+    scene.assets = new AssetManager();
+    data.entities.forEach(d=>{
+      const e=new Entity(d.name); e.transform={...d.transform};
+      scene.addEntity(e);
+      if(d.components.SpriteRenderer) e.addComponent('SpriteRenderer', d.components.SpriteRenderer);
+      if(d.components.RigidBody) e.addComponent('RigidBody', d.components.RigidBody);
+      if(d.components.BoxCollider) e.addComponent('BoxCollider', d.components.BoxCollider);
+      if(d.components.KeyboardInput) e.addComponent('KeyboardInput', d.components.KeyboardInput);
+      if(d.components.Script){const module=scripts[d.components.Script.file]; e.addComponent('Script',{module});}
+    });
+    return scene;
+  }
+
+  function setupRuntime(files, assets, initialScene){
+    const modules={};
+    Object.entries(files).forEach(([name,code])=>{if(name==='main.js') return; const exports={}; new Function('exports', code)(exports); modules[name]=exports;});
+    const Assets=new AssetManager();
+    assets.forEach(a=>Assets.loadImage(a.name,a.url));
+    const helpers={populateScene:(data,scene)=>{scene.assets=Assets; const modulesLocal=modules; data.entities.forEach(d=>{const e=new Entity(d.name); e.transform={...d.transform}; scene.addEntity(e); if(d.components.SpriteRenderer) e.addComponent('SpriteRenderer',d.components.SpriteRenderer); if(d.components.RigidBody) e.addComponent('RigidBody',d.components.RigidBody); if(d.components.BoxCollider) e.addComponent('BoxCollider',d.components.BoxCollider); if(d.components.KeyboardInput) e.addComponent('KeyboardInput',d.components.KeyboardInput); if(d.components.Script){const mod=modulesLocal[d.components.Script.file]; e.addComponent('Script',{module:mod});}});};};
+    const mainWrapper = new Function('registerMain', files['main.js']);
+    mainWrapper((cb)=>cb({Engine,Scene,Entity,Components,Assets,helpers,initialScene}));
+  }
+
+  window.setupRuntime=setupRuntime;
+})();`;
     }
 
-    // Start loop
-    requestAnimationFrame(loop);
-
-    // Begin at menu and music
-    goToMenu();
+    window.addEventListener('load', initEditor);
   </script>
 </body>
 </html>
